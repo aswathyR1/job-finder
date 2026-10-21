@@ -112,6 +112,7 @@ export default function App() {
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">◆</span>
           <span>JobFinder</span>
+          <span className="tagline">Every job board, one search</span>
         </div>
         <div className="topbar-actions">
           {!apiKey && (
@@ -130,7 +131,15 @@ export default function App() {
         {!search && (
           <>
             <h1>Find your next job</h1>
-            <p className="hero-sub">Search listings from LinkedIn, Indeed, Glassdoor and more, all in one place.</p>
+            <p className="hero-sub">
+              One search across LinkedIn, Indeed, Glassdoor and more, so you don't have to check every site.
+            </p>
+            <ul className="perks" aria-label="Why JobFinder">
+              <li>🔎 Many job sites, one list</li>
+              <li>🎯 Only titles that match yours</li>
+              <li>🚫 No ads, no tracking</li>
+              <li>↗ Apply on the original posting</li>
+            </ul>
           </>
         )}
         <SearchForm onSearch={handleSearch} initial={search} busy={status === "loading"} />

@@ -337,3 +337,20 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; font-
 /* ---------- Footer ---------- */
 .footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 16px; }
 .key-btn { padding: 8px 14px; font-size: 14px; }
+
+/* ---------- Tagline + perks ---------- */
+.tagline {
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--border);
+}
+@media (max-width: 560px) { .tagline { display: none; } }
+.perks {
+  list-style: none; padding: 0; margin: -10px auto 26px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+}
+.perks li {
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+  padding: 5px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--border);
+}
