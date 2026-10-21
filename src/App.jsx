@@ -100,6 +100,11 @@ export default function App() {
           <span>JobFinder</span>
         </div>
         <div className="topbar-actions">
+          {!apiKey && (
+            <button className="btn btn-primary key-btn" onClick={() => setShowSettings(true)}>
+              🔑 Add API key
+            </button>
+          )}
           <ThemeToggle />
           <button className="icon-btn" onClick={() => setShowSettings(true)} aria-label="Settings" title="Settings">
             <GearIcon />
