@@ -55,7 +55,10 @@ export async function searchJobs(params, apiKey) {
   if (res.status === 429) {
     throw new SearchError("You've hit the free plan's limit. Wait a little, or until next month's quota resets.");
   }
-  if (!res.ok) throw new SearchError(`Job search failed (error ${res.status}). Try again in a moment.`);
+  if (!res.ok) {
+    const detail = await res.json().then((b) => b.message || b.error, () => "");
+    throw new SearchError(`Job search failed (error ${res.status}${detail ? `: ${detail}` : ""}). Try again in a moment.`);
+  }
 
   const body = await res.json();
   const jobs = (body.data || []).map(normalize);
