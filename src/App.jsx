@@ -8,6 +8,8 @@ import JobDetail from "./components/JobDetail.jsx";
 import SettingsModal from "./components/SettingsModal.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 
+const MAX_PAGES_PER_CLICK = 3;
+
 const DEFAULT_FILTERS = {
   datePosted: "week",
   employmentTypes: [],
@@ -36,19 +38,31 @@ export default function App() {
     setStatus(nextPage === 1 ? "loading" : "loadingMore");
     setError("");
     try {
-      let results;
-      if (useDemo) {
+      const fetchPage = async (p) => {
+        if (!useDemo) return searchJobs({ ...nextSearch, ...filters, page: p }, apiKey);
         await new Promise((r) => setTimeout(r, 400));
-        results = nextPage === 1 ? DEMO_JOBS.filter((j) => matchesDemoFilters(j, filters)) : [];
-      } else {
-        results = await searchJobs(
-          { ...nextSearch, ...filters, page: nextPage },
-          apiKey
-        );
+        return p === 1 ? DEMO_JOBS.filter((j) => matchesDemoFilters(j, filters)) : [];
+      };
+      const visible = (j) => !filters.exactTitle || titleMatches(j, nextSearch.query);
+
+      // Later pages can repeat jobs we already have, or only add jobs hidden by "Title must match".
+      // Keep going (up to 3 pages per click) until something new shows up.
+      const known = new Set(nextPage === 1 ? [] : jobs.map((j) => j.id));
+      const added = [];
+      let p = nextPage;
+      let more = false;
+      for (; p < nextPage + MAX_PAGES_PER_CLICK; p++) {
+        const results = await fetchPage(p);
+        const fresh = dedupe(results).filter((j) => !known.has(j.id));
+        fresh.forEach((j) => known.add(j.id));
+        added.push(...fresh);
+        more = fresh.length > 0 && results.length >= 10;
+        if (!more || fresh.some(visible) || nextPage === 1) break;
       }
-      setJobs((prev) => (nextPage === 1 ? results : dedupe([...prev, ...results])));
-      setPage(nextPage);
-      setHasMore(results.length >= 10);
+
+      setJobs((prev) => (nextPage === 1 ? added : [...prev, ...added]));
+      setPage(Math.min(p, nextPage + MAX_PAGES_PER_CLICK - 1));
+      setHasMore(more);
       setStatus("done");
       if (nextPage === 1) setSelectedId(null);
     } catch (e) {
