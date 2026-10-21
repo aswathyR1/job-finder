@@ -28,26 +28,34 @@ export class SearchError extends Error {}
  * @param {{query: string, location: string, country: string, datePosted: string,
  *          remote: boolean, employmentTypes: string[], page: number}} params
  */
+// JSearch v5 serves search at /search-v2; older versions used /search.
+const SEARCH_PATHS = ["/search-v2", "/search"];
+
 export async function searchJobs(params, apiKey) {
-  const url = new URL(`https://${HOST}/search`);
-  url.searchParams.set("query", params.location ? `${params.query} in ${params.location}` : params.query);
-  url.searchParams.set("page", String(params.page || 1));
-  url.searchParams.set("num_pages", "1");
-  url.searchParams.set("country", params.country || "us");
-  url.searchParams.set("date_posted", params.datePosted || "all");
-  if (params.remote) url.searchParams.set("work_from_home", "true");
-  if (params.employmentTypes?.length) url.searchParams.set("employment_types", params.employmentTypes.join(","));
+  const query = new URLSearchParams();
+  query.set("query", params.location ? `${params.query} in ${params.location}` : params.query);
+  query.set("page", String(params.page || 1));
+  query.set("num_pages", "1");
+  query.set("country", params.country || "us");
+  query.set("date_posted", params.datePosted || "all");
+  if (params.remote) query.set("work_from_home", "true");
+  if (params.employmentTypes?.length) query.set("employment_types", params.employmentTypes.join(","));
 
   // Cache each search for the browser session so repeat searches don't use up the free quota.
-  const cacheKey = CACHE_PREFIX + url.search;
+  const cacheKey = CACHE_PREFIX + query;
   const cached = readCache(cacheKey);
   if (cached) return cached;
 
   let res;
-  try {
-    res = await fetch(url, { headers: { "X-RapidAPI-Key": apiKey, "X-RapidAPI-Host": HOST } });
-  } catch {
-    throw new SearchError("Couldn't reach the job search service. Check your internet connection.");
+  for (const path of SEARCH_PATHS) {
+    try {
+      res = await fetch(`https://${HOST}${path}?${query}`, {
+        headers: { "X-RapidAPI-Key": apiKey, "X-RapidAPI-Host": HOST },
+      });
+    } catch {
+      throw new SearchError("Couldn't reach the job search service. Check your internet connection.");
+    }
+    if (res.status !== 404) break;
   }
   if (res.status === 401 || res.status === 403) {
     throw new SearchError("Your RapidAPI key was rejected. Make sure you subscribed to JSearch (free Basic plan) and pasted the right key in Settings.");
@@ -61,7 +69,9 @@ export async function searchJobs(params, apiKey) {
   }
 
   const body = await res.json();
-  const jobs = (body.data || []).map(normalize);
+  // v5 returns { data: { jobs: [...] } }; older versions returned { data: [...] }.
+  const list = Array.isArray(body.data) ? body.data : body.data?.jobs || body.jobs || [];
+  const jobs = list.map(normalize);
   writeCache(cacheKey, jobs);
   return jobs;
 }
