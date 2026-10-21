@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { formatDescription } from "../formatDescription.js";
 import { CompanyLogo, PublisherBadge, typeLabel, timeAgo } from "./shared.jsx";
 
 export default function JobDetail({ job, onClose }) {
@@ -76,16 +77,22 @@ export default function JobDetail({ job, onClose }) {
         </div>
       )}
 
-      {highlights.map(([title, items]) => (
-        <section className="detail-section" key={title}>
-          <h3>{title}</h3>
-          <ul>{items.map((item, i) => <li key={i}>{item}</li>)}</ul>
-        </section>
-      ))}
+      {highlights.length > 0 && (
+        <div className="highlights">
+          {highlights.map(([title, items]) => (
+            <section className="detail-section" key={title}>
+              <h3>{title}</h3>
+              <ul>{items.map((item, i) => <li key={i}>{item}</li>)}</ul>
+            </section>
+          ))}
+        </div>
+      )}
 
-      <section className="detail-section">
+      <section className="detail-section about">
         <h3>About the job</h3>
-        <div className={`description ${longDescription && !expanded ? "clamped" : ""}`}>{job.description}</div>
+        <div className={`description ${longDescription && !expanded ? "clamped" : ""}`}>
+          <Description text={job.description} />
+        </div>
         {longDescription && (
           <button className="link-btn" onClick={() => setExpanded((v) => !v)}>
             {expanded ? "Show less" : "Show full description"}
@@ -94,6 +101,31 @@ export default function JobDetail({ job, onClose }) {
       </section>
     </aside>
   );
+}
+
+function Description({ text }) {
+  const blocks = useMemo(() => formatDescription(text), [text]);
+  if (!blocks.length) return <p className="muted">No description was provided.</p>;
+  return blocks.map((b, i) => {
+    if (b.type === "heading") return <h4 key={i}>{tidyHeading(b.text)}</h4>;
+    if (b.type === "list") {
+      return (
+        <ul key={i}>
+          {b.items.map((item, j) => <li key={j}>{item}</li>)}
+        </ul>
+      );
+    }
+    return <p key={i}>{b.text}</p>;
+  });
+}
+
+// "KEY RESPONSIBILITIES" → "Key responsibilities"
+function tidyHeading(text) {
+  const letters = text.replace(/[^A-Za-z]/g, "");
+  if (letters && letters === letters.toUpperCase()) {
+    return text.charAt(0) + text.slice(1).toLowerCase();
+  }
+  return text;
 }
 
 function Fact({ icon, text }) {

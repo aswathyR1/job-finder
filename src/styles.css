@@ -279,12 +279,27 @@ input, select { font: inherit; color: inherit; }
 .apply-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
 .apply-row .publisher { margin-left: 0; }
 .apply-options { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 14px; }
-.detail-section { margin-top: 22px; }
-.detail-section h3 { font-size: 15px; margin-bottom: 8px; }
-.detail-section ul { margin: 0; padding-left: 20px; color: var(--text-2); }
-.detail-section li { margin-bottom: 4px; }
-.description { white-space: pre-wrap; color: var(--text-2); font-size: 14.5px; }
-.description.clamped { max-height: 360px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
+.detail-section { margin-top: 24px; }
+.detail-section h3 { font-size: 16px; margin-bottom: 10px; }
+.detail-section > ul, .description ul { margin: 0 0 14px; padding-left: 0; list-style: none; color: var(--text-2); }
+.detail-section > ul li, .description li { position: relative; padding-left: 20px; margin-bottom: 7px; line-height: 1.6; }
+.detail-section > ul li::before, .description li::before {
+  content: ""; position: absolute; left: 4px; top: .7em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--primary);
+}
+.highlights { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 28px; }
+.highlights .detail-section { background: var(--surface-2); border-radius: 12px; padding: 14px 16px 4px; margin-top: 16px; }
+.highlights .detail-section h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.about { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.about > h3 { font-size: 18px; margin-bottom: 14px; }
+.description { color: var(--text-2); font-size: 15px; line-height: 1.7; max-width: 68ch; overflow-wrap: anywhere; }
+.description p { margin: 0 0 12px; }
+.description h4 {
+  color: var(--text); font-size: 15px; font-weight: 700;
+  margin: 22px 0 8px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.description h4:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.description.clamped { max-height: 420px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
 
 @media (max-width: 900px) {
   .results-layout { grid-template-columns: 1fr; }

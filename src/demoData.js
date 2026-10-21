@@ -22,7 +22,7 @@ export const DEMO_JOBS = [
     publisher: "LinkedIn",
     salary: "$72,000 – $90,000/yr",
     description:
-      "Northwind Analytics is looking for a Data Analyst to turn messy operational data into clear decisions.\n\nYou'll build dashboards, write SQL against our warehouse, and partner with product and finance teams.",
+      "Northwind Analytics is looking for a Data Analyst to turn messy operational data into clear decisions. You'll join a team of six analysts supporting product, finance and operations.\n\nKEY RESPONSIBILITIES\n• Build and maintain KPI dashboards in Tableau\n• Write SQL against our Snowflake warehouse\n• Answer ad-hoc questions from business partners\n• Document metric definitions\n\nWhat you'll bring:\n- 2+ years working with SQL\n- Experience with Tableau or Power BI\n- Clear written communication\n\nBenefits\nHybrid schedule (2 days in office)\n401(k) with 4% match\n$1,500 yearly learning budget\n\nNorthwind Analytics is an equal opportunity employer.",
     highlights: {
       Qualifications: ["2+ years working with SQL", "Experience with Tableau or Power BI", "Clear written communication"],
       Responsibilities: ["Build and maintain KPI dashboards", "Answer ad-hoc business questions", "Document data definitions"],
