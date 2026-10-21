@@ -354,3 +354,4 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; font-
   background: color-mix(in srgb, var(--surface) 70%, transparent);
   border: 1px solid var(--border);
 }
+.shared-note { background: var(--success-soft); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 4px 0 12px; }

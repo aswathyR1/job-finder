@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const JSEARCH_URL = "https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch/pricing";
 
-export default function SettingsModal({ apiKey, onSave, onDemo, onClose }) {
+export default function SettingsModal({ apiKey, shared, onSave, onDemo, onClose }) {
   const [value, setValue] = useState(apiKey);
   const [reveal, setReveal] = useState(false);
 
@@ -16,7 +16,14 @@ export default function SettingsModal({ apiKey, onSave, onDemo, onClose }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <button className="icon-btn modal-close" onClick={onClose} aria-label="Close">×</button>
-        <h2 id="settings-title">Connect job search</h2>
+        <h2 id="settings-title">{shared.active ? "Your own API key (optional)" : "Connect job search"}</h2>
+        {shared.active && (
+          <div className="shared-note">
+            ✅ This site includes free shared searches
+            {shared.until ? ` until ${shared.until.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}.
+            You only need your own key if they run out.
+          </div>
+        )}
         <p className="muted">
           JobFinder uses the free JSearch API to search jobs. The free Basic plan stops at its monthly limit, so
           you're never charged.

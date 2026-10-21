@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getApiKey, searchJobs, SearchError, setApiKey, titleMatches } from "./api.js";
+import { effectiveKey, getApiKey, searchJobs, SearchError, setApiKey, sharedKeyInfo, titleMatches } from "./api.js";
 import { DEMO_JOBS } from "./demoData.js";
 import SearchForm from "./components/SearchForm.jsx";
 import Filters from "./components/Filters.jsx";
@@ -19,7 +19,9 @@ const DEFAULT_FILTERS = {
 };
 
 export default function App() {
-  const [apiKey, setKey] = useState(getApiKey);
+  const [apiKey, setKey] = useState(getApiKey); // the visitor's own key
+  const auth = effectiveKey(apiKey);
+  const canSearch = Boolean(auth.key);
   const [showSettings, setShowSettings] = useState(false);
   const [search, setSearch] = useState(null); // { query, location, country }
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -34,12 +36,12 @@ export default function App() {
   // Server-side filters trigger a new search; title match and sort are applied locally.
   const serverFilters = `${filters.datePosted}|${filters.employmentTypes.join(",")}|${filters.remote}`;
 
-  async function run(nextSearch, nextPage, useDemo = demo) {
+  async function run(nextSearch, nextPage, useDemo = demo, searchAuth = auth) {
     setStatus(nextPage === 1 ? "loading" : "loadingMore");
     setError("");
     try {
       const fetchPage = async (p) => {
-        if (!useDemo) return searchJobs({ ...nextSearch, ...filters, page: p }, apiKey);
+        if (!useDemo) return searchJobs({ ...nextSearch, ...filters, page: p }, searchAuth);
         await new Promise((r) => setTimeout(r, 400));
         return p === 1 ? DEMO_JOBS.filter((j) => matchesDemoFilters(j, filters)) : [];
       };
@@ -72,7 +74,7 @@ export default function App() {
   }
 
   function handleSearch(values) {
-    if (!apiKey && !demo) {
+    if (!canSearch && !demo) {
       setShowSettings(true);
       return;
     }
@@ -115,7 +117,7 @@ export default function App() {
           <span className="tagline">Every job board, one search</span>
         </div>
         <div className="topbar-actions">
-          {!apiKey && (
+          {!canSearch && (
             <button className="btn btn-primary key-btn" onClick={() => setShowSettings(true)}>
               🔑 Add API key
             </button>
@@ -144,7 +146,7 @@ export default function App() {
         )}
         <SearchForm onSearch={handleSearch} initial={search} busy={status === "loading"} />
         {search && <Filters filters={filters} onChange={setFilters} />}
-        {!apiKey && !demo && !search && (
+        {!canSearch && !demo && !search && (
           <p className="hero-hint">
             First time here? <button className="link-btn" onClick={() => setShowSettings(true)}>Add your free API key</button>
             {" "}or <button className="link-btn" onClick={() => startDemo()}>try the demo</button>.
@@ -199,13 +201,14 @@ export default function App() {
       {showSettings && (
         <SettingsModal
           apiKey={apiKey}
+          shared={sharedKeyInfo()}
           onSave={(k) => {
             setApiKey(k);
             setKey(k);
             setShowSettings(false);
-            if (k) {
+            if (effectiveKey(k).key) {
               setDemo(false);
-              if (search) run(search, 1, false);
+              if (search) run(search, 1, false, effectiveKey(k));
             }
           }}
           onDemo={() => startDemo()}

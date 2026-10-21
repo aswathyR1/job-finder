@@ -25,6 +25,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # Shared key so visitors can search without their own (set with: gh secret set VITE_RAPIDAPI_KEY).
+          VITE_RAPIDAPI_KEY: ${{ secrets.VITE_RAPIDAPI_KEY }}
+          # Last day the shared key is used (YYYY-MM-DD). After this, visitors need their own key.
+          VITE_SHARED_KEY_UNTIL: "2026-11-21"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

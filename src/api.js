@@ -5,12 +5,32 @@ const HOST = "jsearch.p.rapidapi.com";
 const KEY_STORAGE = "jobfinder.rapidapiKey";
 const CACHE_PREFIX = "jobfinder.cache.";
 
+// Optional site-wide key, injected at build time (GitHub secret VITE_RAPIDAPI_KEY) so visitors can
+// search without their own key. It stops being used after VITE_SHARED_KEY_UNTIL (YYYY-MM-DD, inclusive).
+const SHARED_KEY = import.meta.env.VITE_RAPIDAPI_KEY || "";
+const SHARED_KEY_UNTIL = import.meta.env.VITE_SHARED_KEY_UNTIL || "";
+
+export function sharedKeyInfo() {
+  if (!SHARED_KEY) return { active: false, until: null };
+  const until = SHARED_KEY_UNTIL ? new Date(`${SHARED_KEY_UNTIL}T23:59:59`) : null;
+  const active = !until || Date.now() <= until.getTime();
+  return { active, until };
+}
+
+/** The visitor's own key, saved in this browser. */
 export function getApiKey() {
   try {
-    return localStorage.getItem(KEY_STORAGE) || import.meta.env.VITE_RAPIDAPI_KEY || "";
+    return localStorage.getItem(KEY_STORAGE) || "";
   } catch {
-    return import.meta.env.VITE_RAPIDAPI_KEY || "";
+    return "";
   }
+}
+
+/** The key searches should use: the visitor's own, else the site's shared key while it's active. */
+export function effectiveKey(personalKey) {
+  if (personalKey) return { key: personalKey, shared: false };
+  if (sharedKeyInfo().active) return { key: SHARED_KEY, shared: true };
+  return { key: "", shared: false };
 }
 
 export function setApiKey(key) {
@@ -24,14 +44,17 @@ export function setApiKey(key) {
 
 export class SearchError extends Error {}
 
-/**
- * @param {{query: string, location: string, country: string, datePosted: string,
- *          remote: boolean, employmentTypes: string[], page: number}} params
- */
 // JSearch v5 serves search at /search-v2; older versions used /search.
 const SEARCH_PATHS = ["/search-v2", "/search"];
 
-export async function searchJobs(params, apiKey) {
+const ADD_OWN_KEY = "Add your own free key in Settings (⚙️) to keep searching.";
+
+/**
+ * @param {{query: string, location: string, country: string, datePosted: string,
+ *          remote: boolean, employmentTypes: string[], page: number}} params
+ * @param {{key: string, shared: boolean}} auth  from effectiveKey()
+ */
+export async function searchJobs(params, { key: apiKey, shared }) {
   const query = new URLSearchParams();
   query.set("query", params.location ? `${params.query} in ${params.location}` : params.query);
   query.set("page", String(params.page || 1));
@@ -58,10 +81,18 @@ export async function searchJobs(params, apiKey) {
     if (res.status !== 404) break;
   }
   if (res.status === 401 || res.status === 403) {
-    throw new SearchError("Your RapidAPI key was rejected. Make sure you subscribed to JSearch (free Basic plan) and pasted the right key in Settings.");
+    throw new SearchError(
+      shared
+        ? `This site's shared searches aren't available right now. ${ADD_OWN_KEY}`
+        : "Your RapidAPI key was rejected. Make sure you subscribed to JSearch (free Basic plan) and pasted the right key in Settings."
+    );
   }
   if (res.status === 429) {
-    throw new SearchError("You've hit the free plan's limit. Wait a little, or until next month's quota resets.");
+    throw new SearchError(
+      shared
+        ? `This site's free searches for the month have been used up. ${ADD_OWN_KEY}`
+        : "You've hit the free plan's limit. Wait a little, or until next month's quota resets."
+    );
   }
   if (!res.ok) {
     const detail = await res.json().then((b) => b.message || b.error, () => "");
